@@ -6,8 +6,9 @@ import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 public class ValidationUtil {
 
-    public static void checkNotFoundWithId(boolean found, int id) {
+    public static boolean checkNotFoundWithId(boolean found, int id) {
         checkNotFound(found, "id=" + id);
+        return found;
     }
 
     public static <T> T checkNotFoundWithId(T object, int id) {
