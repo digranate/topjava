@@ -9,3 +9,10 @@ INSERT INTO users (name, email, password) VALUES
 INSERT INTO user_roles (role, user_id) VALUES
   ('ROLE_USER', 100000),
   ('ROLE_ADMIN', 100001);
+
+DELETE FROM meals;
+
+INSERT INTO meals (userid, description, datetime, calories) VALUES
+  (100000, 'breakfast', '2010-01-01', 50),
+  (100000, 'dinner', '2011-01-01', 100);
+
