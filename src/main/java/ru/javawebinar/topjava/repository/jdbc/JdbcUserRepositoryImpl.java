@@ -4,20 +4,49 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
+import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
 
 import javax.sql.DataSource;
-import java.util.List;
+import java.sql.Array;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class JdbcUserRepositoryImpl implements UserRepository {
 
-    private static final BeanPropertyRowMapper<User> ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
+    //TODO
+    private static final BeanPropertyRowMapper<User> ROW_MAPPER = new BeanPropertyRowMapper<User>(){
+        @Override
+        public User mapRow(ResultSet resultSet, int i) throws SQLException {
+            User user = new User();
+            user.setId(resultSet.getInt("id"));
+            user.setName(resultSet.getString("name"));
+            user.setEmail(resultSet.getString("email"));
+            user.setPassword(resultSet.getString("password"));
+            user.setRegistered(resultSet.getTimestamp("registered"));
+            user.setEnabled(resultSet.getBoolean("enabled"));
+            user.setCaloriesPerDay(resultSet.getInt("caloriesPerDay"));
+
+            Array a = resultSet.getArray("roles");
+            String[] roles = (String[])a.getArray();
+            Set<Role> rolesNew = Arrays.stream(roles).map(
+                    s -> Role.valueOf(s)
+            ).collect(Collectors.toSet());
+
+            user.setRoles(rolesNew);
+
+            return user;
+        }
+    };
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -70,6 +99,7 @@ public class JdbcUserRepositoryImpl implements UserRepository {
 
     @Override
     public List<User> getAll() {
-        return jdbcTemplate.query("SELECT * FROM users ORDER BY name, email", ROW_MAPPER);
+        return jdbcTemplate.query(
+                "SELECT * FROM users left outer join user_roles on users.id = user_roles.user_id ORDER BY name, email", ROW_MAPPER);
     }
 }
